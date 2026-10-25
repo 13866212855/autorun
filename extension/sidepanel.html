@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 表单自动填写助手</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">✨</div>
+        <div class="brand-text">
+          <h1>AI 表单填报助手</h1>
+          <span class="version-tag">V1.0 智能版</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnSettings" class="icon-btn" title="服务配置">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Settings Drawer / Modal -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>后端服务配置</h3>
+          <button id="btnCloseSettings" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label for="serverUrlInput">后端服务地址 (API Base URL):</label>
+          <input type="text" id="serverUrlInput" placeholder="http://localhost:3000" />
+          <p class="help-text">用于处理Excel解析、台账截图OCR多模态分析的大模型服务地址。</p>
+        </div>
+        <div class="modal-footer">
+          <button id="btnSaveSettings" class="btn btn-primary">保存配置</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- Section 1: Ledger Data Source (Excel & Screenshots) -->
+      <section class="card section-upload">
+        <div class="card-header">
+          <div class="title-with-badge">
+            <h2>1. 台账数据源</h2>
+            <span class="sub-badge">Excel / 截图</span>
+          </div>
+          <button id="btnClearData" class="text-btn hidden">清空</button>
+        </div>
+
+        <!-- Excel Upload Area -->
+        <div class="upload-zone" id="excelDropZone">
+          <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden-input" />
+          <div class="upload-idle" id="excelIdleState">
+            <span class="upload-icon">📊</span>
+            <div class="upload-text">
+              <span class="primary-text">点击或拖拽上传 Excel 台账</span>
+              <span class="secondary-text">支持 .xlsx / .xls / .csv 格式</span>
+            </div>
+          </div>
+          <div class="file-loaded-info hidden" id="excelLoadedState">
+            <div class="file-meta">
+              <span class="file-badge">EXCEL</span>
+              <span class="file-name" id="excelFileName">台账数据.xlsx</span>
+            </div>
+            <div class="file-stats">
+              <span id="excelRecordCount">共 0 条数据</span>
+              <button id="btnReuploadExcel" class="link-btn">更换文件</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screenshots Upload & Paste Area -->
+        <div class="screenshot-zone" id="screenshotDropZone">
+          <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden-input" />
+          <div class="screenshot-header">
+            <span class="screenshot-title">📷 台账截图补充 (支持粘贴剪贴板 Ctrl+V / 截图)</span>
+            <button id="btnSelectImages" class="link-btn">选择图片</button>
+          </div>
+          <div class="image-previews" id="imagePreviewsContainer">
+            <div class="paste-hint-card" id="pasteHint">
+              <span>拖拽图片到此处或按 Ctrl+V 粘贴</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-Record Pager Navigation -->
+        <div class="record-pager" id="recordPager">
+          <div class="pager-info">
+            <span>当前填报数据：</span>
+            <strong class="highlight-record" id="currentRecordLabel">第 1 / 1 条</strong>
+          </div>
+          <div class="pager-controls">
+            <button id="btnPrevRecord" class="btn btn-sm btn-outline" disabled>上一条</button>
+            <button id="btnNextRecord" class="btn btn-sm btn-outline" disabled>下一条</button>
+          </div>
+        </div>
+
+        <!-- Current Record Key-Value Preview Drawer -->
+        <div class="record-preview-pill" id="recordPreviewToggle">
+          <span>🔍 查看当前待填数据详情 (<span id="recordFieldCount">0</span> 项)</span>
+          <span class="toggle-arrow" id="recordArrow">▼</span>
+        </div>
+        <div class="record-details-box hidden" id="recordDetailsBox">
+          <div class="tags-cloud" id="recordTagsCloud"></div>
+        </div>
+      </section>
+
+      <!-- Section 2: Form Structure & AI Analysis -->
+      <section class="card section-analysis">
+        <div class="card-header">
+          <div class="title-with-badge">
+            <h2>2. 表单识别与AI映射</h2>
+            <span class="badge badge-info" id="detectedElemBadge">未识别表单</span>
+          </div>
+          <button id="btnAnalyzeForm" class="btn btn-primary btn-pulse">
+            <span class="btn-icon">⚡</span>
+            <span>分析表单</span>
+          </button>
+        </div>
+
+        <!-- Progress / Loading Banner -->
+        <div class="status-banner hidden" id="statusBanner">
+          <div class="spinner"></div>
+          <div class="status-text" id="statusBannerText">正在提取页面表单DOM结构并调用多模态大模型分析...</div>
+        </div>
+
+        <!-- Mappings Table Container -->
+        <div class="mapping-container" id="mappingContainer">
+          <div class="empty-mapping-placeholder" id="emptyMappingPlaceholder">
+            <span class="empty-icon">🎯</span>
+            <p>请上传台账并打开目标填报页面，然后点击【分析表单】</p>
+          </div>
+
+          <div class="mapping-table-wrapper hidden" id="mappingTableWrapper">
+            <div class="table-actions">
+              <span class="count-summary">已生成 <strong id="mappingCount">0</strong> 个字段映射</span>
+              <button id="btnCheckAllPreview" class="text-btn">在页面高亮所有字段</button>
+            </div>
+            <table class="mapping-table">
+              <thead>
+                <tr>
+                  <th style="width: 32%;">台账来源项 (数值)</th>
+                  <th style="width: 48%;">目标表单元素</th>
+                  <th style="width: 20%; text-align: right;">定位/核验</th>
+                </tr>
+              </thead>
+              <tbody id="mappingTableBody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Fill Execution & Feedback -->
+      <section class="card section-execution" id="executionCard">
+        <div class="card-header">
+          <h2>3. 执行填报与结果核验</h2>
+        </div>
+
+        <div class="execution-actions">
+          <button id="btnStartFill" class="btn btn-success btn-lg" disabled>
+            <span class="btn-icon">🚀</span>
+            <span>开始填写当前记录</span>
+          </button>
+        </div>
+
+        <!-- Feedback Results Summary Box -->
+        <div class="feedback-box hidden" id="feedbackBox">
+          <div class="feedback-header">
+            <span class="feedback-title" id="feedbackTitle">填报完成</span>
+            <span class="feedback-badge" id="feedbackBadge">100% 成功</span>
+          </div>
+          <div class="feedback-stats">
+            <span class="stat-success">成功: <strong id="statSuccessCount">0</strong></span>
+            <span class="stat-fail">异常: <strong id="statFailCount">0</strong></span>
+          </div>
+          <div class="feedback-list" id="feedbackList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

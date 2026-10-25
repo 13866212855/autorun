@@ -1,0 +1,202 @@
+{
+  "admin": {
+    "id": "admin_root",
+    "username": "admin",
+    "passwordHash": "$2b$10$Szv3eEnWsqCBGx3PD8j21eSO3.Yo1laBIyQctmkfXSLiZjoOEvif2",
+    "createdAt": "2026-10-25T12:13:02.541Z"
+  },
+  "config": {
+    "baseUrl": "https://apihub.agnes-ai.com/v1",
+    "apiKey": "sk-GUdpKQNIwwJSZQ5mYyrMnuCJBOwSbB73c2N6NcnNfk5LoKyq",
+    "textModel": "agnes-2.5-flash",
+    "imageModel": "agnes-2.5-flash",
+    "updatedAt": "2026-10-25T13:24:00.000Z"
+  },
+  "tasks": [
+    {
+      "id": "task_1792930453691_oc3x7",
+      "timestamp": "2026-10-25T12:14:13.691Z",
+      "targetUrl": "https://stats.gov.sample.cn/survey/form/enterprise",
+      "domain": "stats.gov.sample.cn",
+      "excelFileName": "2024年度重点文化企事业单位基础台账.xlsx",
+      "recordIndex": 3,
+      "totalRecords": 3,
+      "mappedFieldsCount": 8,
+      "successCount": 8,
+      "failCount": 0,
+      "status": "success",
+      "details": [
+        {
+          "sourceField": "单位名称",
+          "sourceValue": "",
+          "selector": "单位名称 (全称)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "统一代码",
+          "sourceValue": "",
+          "selector": "统一社会信用代码 (18位)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "负责人",
+          "sourceValue": "",
+          "selector": "法定代表人 / 负责人",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "联系电话",
+          "sourceValue": "",
+          "selector": "联系电话",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "职工人数",
+          "sourceValue": "",
+          "selector": "在编职工人数 (人)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "年营业收入",
+          "sourceValue": "",
+          "selector": "年营业收入 (万元)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "资产总计",
+          "sourceValue": "",
+          "selector": "资产总计 (万元)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "所在区域",
+          "sourceValue": "",
+          "selector": "所在区域",
+          "status": "success",
+          "error": ""
+        }
+      ]
+    },
+    {
+      "id": "task_1792930449725_kbp7h",
+      "timestamp": "2026-10-25T12:14:09.725Z",
+      "targetUrl": "https://stats.gov.sample.cn/survey/form/enterprise",
+      "domain": "stats.gov.sample.cn",
+      "excelFileName": "2024年度重点文化企事业单位基础台账.xlsx",
+      "recordIndex": 3,
+      "totalRecords": 3,
+      "mappedFieldsCount": 8,
+      "successCount": 8,
+      "failCount": 0,
+      "status": "success",
+      "details": [
+        {
+          "sourceField": "单位名称",
+          "sourceValue": "",
+          "selector": "单位名称 (全称)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "统一代码",
+          "sourceValue": "",
+          "selector": "统一社会信用代码 (18位)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "负责人",
+          "sourceValue": "",
+          "selector": "法定代表人 / 负责人",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "联系电话",
+          "sourceValue": "",
+          "selector": "联系电话",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "职工人数",
+          "sourceValue": "",
+          "selector": "在编职工人数 (人)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "年营业收入",
+          "sourceValue": "",
+          "selector": "年营业收入 (万元)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "资产总计",
+          "sourceValue": "",
+          "selector": "资产总计 (万元)",
+          "status": "success",
+          "error": ""
+        },
+        {
+          "sourceField": "所在区域",
+          "sourceValue": "",
+          "selector": "所在区域",
+          "status": "success",
+          "error": ""
+        }
+      ]
+    },
+    {
+      "id": "task_demo_init",
+      "timestamp": "2026-10-25T10:13:02.541Z",
+      "targetUrl": "https://stats.gov.sample.cn/survey/form/enterprise",
+      "domain": "stats.gov.sample.cn",
+      "excelFileName": "文化馆事业单位年度基础数据表.xlsx",
+      "recordIndex": 1,
+      "totalRecords": 3,
+      "mappedFieldsCount": 12,
+      "successCount": 12,
+      "failCount": 0,
+      "status": "success",
+      "details": [
+        {
+          "sourceField": "单位名称",
+          "sourceValue": "市群众艺术文化活动中心",
+          "selector": "#unitName",
+          "targetLabel": "单位名称",
+          "status": "success"
+        },
+        {
+          "sourceField": "统一代码",
+          "sourceValue": "12310000400018892K",
+          "selector": "#creditCode",
+          "targetLabel": "统一社会信用代码",
+          "status": "success"
+        },
+        {
+          "sourceField": "职工人数",
+          "sourceValue": 48,
+          "selector": "#employeeCount",
+          "targetLabel": "在编职工人数",
+          "status": "success"
+        },
+        {
+          "sourceField": "机构类型",
+          "sourceValue": "公益一类事业单位",
+          "selector": "#orgType",
+          "targetLabel": "机构类型",
+          "status": "success"
+        }
+      ]
+    }
+  ]
+}
