@@ -409,6 +409,11 @@ dist
 build
 .git
 .gitignore
+.aider-desk
+.aider*
+.aistudio
+.vscode
+.idea
 Dockerfile
 Dockerbak.txt
 docker-compose*.yml
