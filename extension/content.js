@@ -36,12 +36,47 @@
       return elem.getAttribute('title').trim();
     }
 
-    // 4. In a table row (e.g. <tr><td>标签名</td><td><input/></td></tr>)
+    // 4. In a table cell (e.g. Statistical Matrix Table like 教基3115 / tjxt.moe.edu.cn)
     const td = elem.closest('td');
-    if (td && td.previousElementSibling) {
-      const prevText = td.previousElementSibling.innerText.trim();
-      if (prevText && prevText.length < 30) {
-        return prevText.replace(/[*：:\n]/g, '').trim();
+    if (td) {
+      const tr = td.closest('tr');
+      const table = tr ? tr.closest('table') : null;
+      if (tr && table) {
+        // Find row title (first or second cell text in row, e.g. "普通初中班")
+        const rowCells = Array.from(tr.children);
+        const colIdx = rowCells.indexOf(td);
+        let rowTitle = '';
+        for (let i = 0; i < Math.min(colIdx, 3); i++) {
+          const t = rowCells[i].innerText.trim();
+          if (t && isNaN(Number(t)) && t.length < 25) {
+            rowTitle = t.replace(/[*：:\n]/g, '').trim();
+            break;
+          }
+        }
+
+        // Find column title from table thead or first row
+        let colTitle = '';
+        const headerRows = Array.from(table.querySelectorAll('thead tr, tr:first-child'));
+        if (headerRows.length > 0) {
+          const lastHeaderRow = headerRows[headerRows.length - 1];
+          const headerCells = Array.from(lastHeaderRow.querySelectorAll('th, td'));
+          if (headerCells[colIdx]) {
+            colTitle = headerCells[colIdx].innerText.replace(/[*：:\n]/g, '').trim();
+          }
+        }
+
+        if (rowTitle && colTitle) {
+          return `${rowTitle} - ${colTitle}`;
+        }
+        if (rowTitle) return rowTitle;
+        if (colTitle) return colTitle;
+      }
+
+      if (td.previousElementSibling) {
+        const prevText = td.previousElementSibling.innerText.trim();
+        if (prevText && prevText.length < 30) {
+          return prevText.replace(/[*：:\n]/g, '').trim();
+        }
       }
     }
 

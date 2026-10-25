@@ -29,6 +29,32 @@ import { ScrapedFormElement } from './api/proxy/scrape/route';
 // Preset Systems
 const PRESET_SYSTEMS = [
   {
+    id: 'tjxt_education',
+    name: '教育事业综合统计调查_2026 (全国教育统计管理信息采集系统)',
+    url: 'https://tjxt.moe.edu.cn/collections/?_t=6ab53f8b994bc000d9d67b3a#/pageGather',
+    badge: '教基3115 · 教育部统发',
+    isEducationTable: true,
+    schoolType: '完全中学',
+    fields: [
+      { id: 'edu_r02_c03', label: '普通初中班 - 毕业生数', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c04', label: '普通初中班 - 招生数', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c05', label: '普通初中班 - 在校生数(合计)', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c06', label: '普通初中班 - 在校生数(女)', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c07', label: '普通初中班 - 在校生数(一年级)', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c08', label: '普通初中班 - 在校生数(二年级)', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c09', label: '普通初中班 - 在校生数(三年级)', type: 'number', placeholder: '0' },
+      { id: 'edu_r02_c10', label: '普通初中班 - 预计毕业生数', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c03', label: '职业初中班 - 毕业生数', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c04', label: '职业初中班 - 招生数', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c05', label: '职业初中班 - 在校生数(合计)', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c06', label: '职业初中班 - 在校生数(女)', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c07', label: '职业初中班 - 在校生数(一年级)', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c08', label: '职业初中班 - 在校生数(二年级)', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c09', label: '职业初中班 - 在校生数(三年级)', type: 'number', placeholder: '0' },
+      { id: 'edu_r03_c10', label: '职业初中班 - 预计毕业生数', type: 'number', placeholder: '0' },
+    ],
+  },
+  {
     id: 'culture_enterprise',
     name: '全国文化企事业单位年度统计调查表 (综合类)',
     url: 'https://stats.gov.sample.cn/survey/form/enterprise',
@@ -187,6 +213,61 @@ const SAMPLE_EXCEL_DATA = {
   ],
 };
 
+// Education statistics sample ledger matching tjxt.moe.edu.cn (全国教育事业综合统计调查)
+const SAMPLE_EDUCATION_EXCEL_DATA = {
+  fileName: '2026学年某完全中学初中部分类学生数基础台账.xlsx',
+  headers: [
+    '指标分类',
+    '代码',
+    '毕业生数',
+    '招生数',
+    '在校生数_合计',
+    '在校生数_女',
+    '在校生数_一年级',
+    '在校生数_二年级',
+    '在校生数_三年级',
+    '预计毕业生数',
+  ],
+  rows: [
+    {
+      '指标分类': '普通初中班',
+      '代码': '02',
+      '毕业生数': '245',
+      '招生数': '260',
+      '在校生数_合计': '768',
+      '在校生数_女': '372',
+      '在校生数_一年级': '260',
+      '在校生数_二年级': '255',
+      '在校生数_三年级': '253',
+      '预计毕业生数': '253',
+    },
+    {
+      '指标分类': '职业初中班',
+      '代码': '03',
+      '毕业生数': '35',
+      '招生数': '40',
+      '在校生数_合计': '110',
+      '在校生数_女': '48',
+      '在校生数_一年级': '40',
+      '在校生数_二年级': '38',
+      '在校生数_三年级': '32',
+      '预计毕业生数': '32',
+    },
+    {
+      '指标分类': '特殊教育班',
+      '代码': '04',
+      '毕业生数': '8',
+      '招生数': '10',
+      '在校生数_合计': '26',
+      '在校生数_女': '11',
+      '在校生数_一年级': '10',
+      '在校生数_二年级': '9',
+      '在校生数_三年级': '7',
+      '预计毕业生数': '7',
+    },
+  ],
+};
+
 export default function HomePage() {
   // Navigation View
   const [activeView, setActiveView] = useState<'sandbox' | 'guide'>('sandbox');
@@ -194,6 +275,10 @@ export default function HomePage() {
   // Address Bar URL & Dynamic Target Page State
   const [targetUrlInput, setTargetUrlInput] = useState('https://stats.gov.sample.cn/survey/form/enterprise');
   const [currentSystemId, setCurrentSystemId] = useState<string>('culture_enterprise');
+  const [leftViewMode, setLeftViewMode] = useState<'form' | 'iframe' | 'paste'>('form');
+  const [pasteHtmlInput, setPasteHtmlInput] = useState('');
+  const [educationActiveTab, setEducationActiveTab] = useState('教基3115');
+  const [isSpaEmpty, setIsSpaEmpty] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [scrapedData, setScrapedData] = useState<{
     url: string;
@@ -215,6 +300,47 @@ export default function HomePage() {
     isHighTech: '否',
     operationStatus: '正常运营',
     businessDesc: '',
+    // 教育统计默认初值
+    edu_r01_c03: '288',
+    edu_r01_c04: '310',
+    edu_r01_c05: '904',
+    edu_r01_c06: '431',
+    edu_r01_c07: '310',
+    edu_r01_c08: '302',
+    edu_r01_c09: '292',
+    edu_r01_c10: '292',
+    edu_r02_c03: '',
+    edu_r02_c04: '',
+    edu_r02_c05: '',
+    edu_r02_c06: '',
+    edu_r02_c07: '',
+    edu_r02_c08: '',
+    edu_r02_c09: '',
+    edu_r02_c10: '',
+    edu_r03_c03: '',
+    edu_r03_c04: '',
+    edu_r03_c05: '',
+    edu_r03_c06: '',
+    edu_r03_c07: '',
+    edu_r03_c08: '',
+    edu_r03_c09: '',
+    edu_r03_c10: '',
+    edu_r04_c03: '',
+    edu_r04_c04: '',
+    edu_r04_c05: '',
+    edu_r04_c06: '',
+    edu_r04_c07: '',
+    edu_r04_c08: '',
+    edu_r04_c09: '',
+    edu_r04_c10: '',
+    edu_r05_c03: '',
+    edu_r05_c04: '',
+    edu_r05_c05: '',
+    edu_r05_c06: '',
+    edu_r05_c07: '',
+    edu_r05_c08: '',
+    edu_r05_c09: '',
+    edu_r05_c10: '',
   });
 
   // Highlight state for sandbox DOM
@@ -256,11 +382,27 @@ export default function HomePage() {
     setFillFeedback(null);
     setHighlightedFields({});
 
+    // Check if matches education statistics system (tjxt.moe.edu.cn)
+    if (
+      fullUrl.includes('tjxt.moe.edu.cn') ||
+      fullUrl.includes('moe.edu.cn') ||
+      fullUrl.includes('pageGather') ||
+      fullUrl.includes('collections/?_t=')
+    ) {
+      setCurrentSystemId('tjxt_education');
+      setScrapedData(null);
+      setIsSpaEmpty(false);
+      setTargetUrlInput(fullUrl);
+      setPageLoading(false);
+      return;
+    }
+
     // Check if matches one of our preset systems
     const matchedPreset = PRESET_SYSTEMS.find((p) => p.url === fullUrl || fullUrl.includes(p.id));
     if (matchedPreset) {
       setCurrentSystemId(matchedPreset.id);
       setScrapedData(null);
+      setIsSpaEmpty(false);
       setTargetUrlInput(matchedPreset.url);
       setPageLoading(false);
       return;
@@ -268,6 +410,7 @@ export default function HomePage() {
 
     // Otherwise, it's an external custom URL: scrape and extract form elements live via backend!
     setCurrentSystemId('custom_external');
+    setIsSpaEmpty(false);
     try {
       const res = await fetch('/api/proxy/scrape', {
         method: 'POST',
@@ -277,38 +420,139 @@ export default function HomePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(`抓取外部网页失败: ${data.error || '无法访问该网页，已为您保留表单容器'}`);
-        // Fallback placeholder structure
+        setIsSpaEmpty(true);
         setScrapedData({
           url: fullUrl,
           title: `目标表单: ${fullUrl}`,
-          elements: [
-            { selector: '#unitName', id: 'unitName', tagName: 'input', type: 'text', label: '单位全称 / 机构名称', placeholder: '请输入' },
-            { selector: '#creditCode', id: 'creditCode', tagName: 'input', type: 'text', label: '统一社会信用代码', placeholder: '请输入' },
-            { selector: '#legalRepresentative', id: 'legalRepresentative', tagName: 'input', type: 'text', label: '法定代表人', placeholder: '请输入' },
-            { selector: '#contactPhone', id: 'contactPhone', tagName: 'input', type: 'tel', label: '联系电话', placeholder: '请输入' },
-            { selector: '#revenue', id: 'revenue', tagName: 'input', type: 'number', label: '营业收入 (万元)', placeholder: '0.00' },
-            { selector: '#employeeCount', id: 'employeeCount', tagName: 'input', type: 'number', label: '从业人员数', placeholder: '0' },
-          ],
+          elements: [],
         });
       } else {
+        const elems = data.elements || [];
+        if (elems.length === 0) {
+          setIsSpaEmpty(true);
+        }
         setScrapedData({
           url: data.url,
           title: data.title || fullUrl,
-          elements: data.elements || [],
+          elements: elems,
         });
       }
     } catch (err: any) {
-      alert(`网络请求异常: ${err.message}`);
+      setIsSpaEmpty(true);
+      setScrapedData({
+        url: fullUrl,
+        title: `目标表单: ${fullUrl}`,
+        elements: [],
+      });
     } finally {
       setPageLoading(false);
     }
   }
 
-  // Load sample excel data
+  // Load sample excel data (Culture Enterprise)
   function loadSampleData() {
     setExcelData(SAMPLE_EXCEL_DATA);
     setCurrentRecordIdx(0);
+  }
+
+  // Load Education statistics sample data (tjxt.moe.edu.cn 教基3115)
+  function loadEducationSampleData() {
+    setExcelData(SAMPLE_EDUCATION_EXCEL_DATA);
+    setCurrentRecordIdx(0);
+    setCurrentSystemId('tjxt_education');
+    setTargetUrlInput('https://tjxt.moe.edu.cn/collections/?_t=6ab53f8b994bc000d9d67b3a#/pageGather');
+    setScrapedData(null);
+    setIsSpaEmpty(false);
+  }
+
+  // Parse pasted HTML into form elements
+  function handleParsePastedHtml() {
+    if (!pasteHtmlInput.trim()) {
+      alert('请先粘贴 HTML 代码片段');
+      return;
+    }
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(pasteHtmlInput, 'text/html');
+      const inputElems = doc.querySelectorAll('input:not([type="hidden"]), select, textarea');
+      const parsed: ScrapedFormElement[] = [];
+
+      inputElems.forEach((elem, idx) => {
+        const id = elem.id || `pasted_elem_${idx}`;
+        const name = elem.getAttribute('name') || '';
+        const tag = elem.tagName.toLowerCase();
+        const type = elem.getAttribute('type') || tag;
+        const selector = id ? `#${id}` : `[name="${name}"]`;
+        let label =
+          elem.getAttribute('placeholder') ||
+          elem.getAttribute('title') ||
+          elem.getAttribute('aria-label') ||
+          name ||
+          id;
+
+        const prev = elem.previousElementSibling;
+        if (prev && ['LABEL', 'SPAN', 'TH', 'TD'].includes(prev.tagName)) {
+          label = (prev as HTMLElement).innerText.trim() || label;
+        }
+
+        parsed.push({
+          selector,
+          id,
+          name,
+          tagName: tag,
+          type,
+          label,
+          placeholder: elem.getAttribute('placeholder') || '',
+        });
+      });
+
+      if (parsed.length === 0) {
+        alert('未在粘贴的内容中找到 input/select/textarea 控件，请确认粘贴的是包含输入框的 HTML 代码');
+        return;
+      }
+
+      setScrapedData({
+        url: targetUrlInput,
+        title: `已从粘贴代码提取 ${parsed.length} 项控件`,
+        elements: parsed,
+      });
+      setCurrentSystemId('custom_external');
+      setLeftViewMode('form');
+      setIsSpaEmpty(false);
+    } catch (e: any) {
+      alert(`解析失败: ${e.message}`);
+    }
+  }
+
+  // Helper for Education Table: Fill all empty numeric inputs with 0
+  function handleEduFillZeros() {
+    const updated = { ...dynamicFormValues };
+    const cols = ['c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'];
+    const rows = ['r01', 'r02', 'r03', 'r04', 'r05'];
+    rows.forEach((r) => {
+      cols.forEach((c) => {
+        const k = `edu_${r}_${c}`;
+        if (!updated[k] || updated[k] === '') {
+          updated[k] = '0';
+        }
+      });
+    });
+    setDynamicFormValues(updated);
+  }
+
+  // Helper for Education Table: Auto sum rows (r02 + r03 + r04 + r05) into r01 (计)
+  function handleEduCalculate() {
+    const updated = { ...dynamicFormValues };
+    const cols = ['c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'];
+    cols.forEach((c) => {
+      let sum = 0;
+      ['r02', 'r03', 'r04', 'r05'].forEach((r) => {
+        const v = Number(updated[`edu_${r}_${c}`]) || 0;
+        sum += v;
+      });
+      updated[`edu_r01_${c}`] = String(sum);
+    });
+    setDynamicFormValues(updated);
   }
 
   // Load sample screenshot
@@ -412,8 +656,8 @@ export default function HomePage() {
       const selector = id ? `#${id}` : `[name="${name}"]`;
 
       // Find label
-      let label = '';
-      if (id) {
+      let label = elem.getAttribute('data-label') || '';
+      if (!label && id) {
         const lbl = formContainerRef.current?.querySelector(`label[for="${id}"]`);
         if (lbl) label = (lbl as HTMLElement).innerText.replace(/[*：:\n]/g, '').trim();
       }
@@ -571,7 +815,7 @@ export default function HomePage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         targetUrl: targetUrlInput,
-        domain: new URL(targetUrlInput).hostname,
+        domain: (() => { try { return new URL(targetUrlInput).hostname; } catch { return targetUrlInput; } })(),
         excelFileName: excelData?.fileName || '在线模拟台账',
         recordIndex: currentRecordIdx + 1,
         totalRecords: excelData?.rows.length || 1,
@@ -741,20 +985,28 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={loadEducationSampleData}
+                  className="px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="自动加载教育事业统计(教基3115)调查表及初中分类学生数台账"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>教育统计示例台账 (教基3115)</span>
+                </button>
                 <button
                   onClick={loadSampleData}
-                  className="px-3.5 py-1.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>一键导入示例台账 (3条数据)</span>
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-blue-400" />
+                  <span>文化企业综合台账 (文统综1号)</span>
                 </button>
                 <button
                   onClick={loadSampleScreenshot}
-                  className="px-3.5 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
-                  <span>加载台账截图</span>
+                  <span>台账截图</span>
                 </button>
                 <button
                   onClick={() => {
@@ -771,6 +1023,22 @@ export default function HomePage() {
                       isHighTech: '否',
                       operationStatus: '正常运营',
                       businessDesc: '',
+                      edu_r01_c03: '0',
+                      edu_r01_c04: '0',
+                      edu_r01_c05: '0',
+                      edu_r01_c06: '0',
+                      edu_r01_c07: '0',
+                      edu_r01_c08: '0',
+                      edu_r01_c09: '0',
+                      edu_r01_c10: '0',
+                      edu_r02_c03: '',
+                      edu_r02_c04: '',
+                      edu_r02_c05: '',
+                      edu_r02_c06: '',
+                      edu_r02_c07: '',
+                      edu_r02_c08: '',
+                      edu_r02_c09: '',
+                      edu_r02_c10: '',
                     });
                     setHighlightedFields({});
                     setFillFeedback(null);
@@ -790,18 +1058,54 @@ export default function HomePage() {
                 <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
                   {/* Dynamic Browser Address Bar */}
                   <div className="bg-slate-950 p-3 border-b border-slate-800 space-y-2.5">
-                    {/* Window Controls & Quick Preset Switcher */}
-                    <div className="flex items-center justify-between gap-2">
+                    {/* Window Controls & View Mode Tabs & Presets */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-red-500/70 inline-block"></span>
                         <span className="w-3 h-3 rounded-full bg-yellow-500/70 inline-block"></span>
                         <span className="w-3 h-3 rounded-full bg-green-500/70 inline-block"></span>
-                        <span className="text-xs font-bold text-slate-300 ml-2">目标表单网页浏览器</span>
+                        <span className="text-xs font-bold text-slate-300 ml-1">目标系统浏览器</span>
+                      </div>
+
+                      {/* View Mode Switcher */}
+                      <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => setLeftViewMode('form')}
+                          className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                            leftViewMode === 'form'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          📑 交互表单视图
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLeftViewMode('iframe')}
+                          className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                            leftViewMode === 'iframe'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          🌐 实时网页反代内嵌
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLeftViewMode('paste')}
+                          className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                            leftViewMode === 'paste'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          📋 粘贴DOM代码
+                        </button>
                       </div>
 
                       {/* Presets Dropdown */}
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-slate-400">预设系统表单：</span>
                         <select
                           value={currentSystemId}
                           onChange={(e) => {
@@ -825,7 +1129,7 @@ export default function HomePage() {
                               {p.name}
                             </option>
                           ))}
-                          <option value="custom_external">-- 输入任意自定义外部网址 --</option>
+                          <option value="custom_external">-- 自定义外部网址 --</option>
                         </select>
                       </div>
                     </div>
@@ -842,7 +1146,7 @@ export default function HomePage() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleLoadUrl();
                           }}
-                          placeholder="例如: stats.gov.sample.cn/survey/form/enterprise 或自定义网址"
+                          placeholder="输入任意目标网址，如: tjxt.moe.edu.cn/collections/?_t=..."
                           className="w-full bg-transparent text-slate-200 focus:outline-none font-mono text-xs"
                         />
                       </div>
@@ -858,150 +1162,651 @@ export default function HomePage() {
                         ) : (
                           <ArrowRight className="w-3.5 h-3.5" />
                         )}
-                        <span>{pageLoading ? '抓取中...' : '加载页面'}</span>
+                        <span>{pageLoading ? '加载中...' : '加载页面'}</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Form Content: Either Scraped Custom Web Form or Active Preset System */}
-                  <div ref={formContainerRef} className="p-6">
-                    {/* Header info */}
-                    <div className="border-b border-slate-800 pb-4 mb-6 flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-5 h-5 text-blue-400" />
-                          <h3 className="text-base font-bold text-white">
-                            {scrapedData ? scrapedData.title : activePreset?.name || '在线业务填报系统'}
-                          </h3>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1">
-                          当前页面 URL: <span className="text-blue-300 font-mono">{targetUrlInput}</span> ·
-                          已成功加载表单结构
-                        </p>
+                  {/* 1. VIEW MODE: IFRAME REVERSE PROXY */}
+                  {leftViewMode === 'iframe' && (
+                    <div className="flex flex-col">
+                      <div className="p-3 bg-blue-950/40 border-b border-blue-500/20 text-xs text-blue-300 flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-blue-400" />
+                          <span>已通过反向代理穿透 X-Frame-Options 嵌入该网址：</span>
+                          <code className="text-blue-200 font-mono bg-blue-900/40 px-1.5 py-0.5 rounded">
+                            {targetUrlInput}
+                          </code>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setLeftViewMode('form')}
+                          className="text-[11px] bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg"
+                        >
+                          切换到高真交互表单
+                        </button>
                       </div>
-                      <span className="text-[11px] bg-slate-800 border border-slate-700 text-slate-300 px-2.5 py-1 rounded-md font-medium">
-                        {scrapedData ? `从外部网址提取 ${scrapedData.elements.length} 项控件` : activePreset?.badge}
-                      </span>
+
+                      <div className="w-full h-[660px] bg-white relative">
+                        <iframe
+                          src={`/api/proxy/view?url=${encodeURIComponent(targetUrlInput)}`}
+                          className="w-full h-full border-0"
+                          title="目标网页实时反代内嵌"
+                          sandbox="allow-same-origin allow-scripts allow-forms"
+                        />
+                      </div>
                     </div>
+                  )}
 
-                    {/* DYNAMIC FORM RENDER */}
-                    {scrapedData ? (
-                      /* Custom Scraped External Form View */
-                      <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                        <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 mb-4 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                          <span>已成功解析外部网站表单结构！右侧 SidePanel 将自动识别并填充以下动态表单控件。</span>
+                  {/* 2. VIEW MODE: PASTE HTML INSPECTOR */}
+                  {leftViewMode === 'paste' && (
+                    <div className="p-6 space-y-4">
+                      <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-bold text-white">
+                          <Code2 className="w-4 h-4 text-blue-400" />
+                          <span>从目标页面 F12 复制粘贴 HTML 代码快速提取控件</span>
                         </div>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          对于需要专用内网或登录的复杂统计系统，您可以在原标签页按{' '}
+                          <code className="text-blue-300 font-mono">F12</code> 打开控制台，在 Elements
+                          面板中右键表单或表格标签，选择 <strong>Copy &gt; Copy outerHTML</strong>
+                          ，粘贴到下方即可瞬间解析全部输入控件：
+                        </p>
+                        <textarea
+                          rows={8}
+                          value={pasteHtmlInput}
+                          onChange={(e) => setPasteHtmlInput(e.target.value)}
+                          placeholder="在此处粘贴包含 input / select / textarea / table 的 HTML 代码片段..."
+                          className="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">
+                            解析器将自动提取 id, name, placeholder, label 及表格行列标签
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleParsePastedHtml}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                            <span>立即解析并生成表单</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {scrapedData.elements.map((elem, idx) => {
-                            const fieldKey = elem.id || elem.name || `field_${idx}`;
-                            const isHighlighted = highlightedFields[elem.selector] || highlightedFields[`#${elem.id}`];
+                  {/* 3. VIEW MODE: INTERACTIVE FORM (Education System 1:1, Scraped Form, or Presets) */}
+                  {leftViewMode === 'form' && (
+                    <div ref={formContainerRef} className="p-6">
+                      {/* EDUCATION SYSTEM 1:1 PRESET (tjxt.moe.edu.cn) */}
+                      {currentSystemId === 'tjxt_education' ? (
+                        <div className="space-y-4">
+                          {/* Top Education System Header */}
+                          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-base font-bold text-white">
+                                  教育事业综合统计调查_2026
+                                </h3>
+                                <span className="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-medium">
+                                  教育部教育统计管理信息采集系统
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 mt-1.5">
+                                <span>办学类型：<strong className="text-slate-200">完全中学</strong></span>
+                                <span>·</span>
+                                <span>填报状态：<strong className="text-emerald-400">采集录入中</strong></span>
+                                <span>·</span>
+                                <span>调查表号：<strong className="text-amber-300 font-mono">教基3115</strong></span>
+                              </div>
+                            </div>
 
-                            return (
-                              <div key={idx} className={elem.tagName === 'textarea' ? 'md:col-span-2' : ''}>
-                                <label
-                                  htmlFor={elem.id || `field_${idx}`}
-                                  className="block text-xs font-semibold text-slate-300 mb-1"
-                                >
-                                  {elem.label}
-                                </label>
+                            <span className="text-[11px] bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-lg">
+                              教基3115 · 全国教育部统发
+                            </span>
+                          </div>
 
-                                <div className="relative">
-                                  {elem.tagName === 'select' ? (
-                                    <select
-                                      id={elem.id}
-                                      name={elem.name}
-                                      value={dynamicFormValues[fieldKey] || ''}
-                                      onChange={(e) =>
-                                        setDynamicFormValues({ ...dynamicFormValues, [fieldKey]: e.target.value })
-                                      }
-                                      className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
-                                        isHighlighted
-                                          ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
-                                          : 'border-slate-700 text-slate-100'
+                          {/* Action Toolbar */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-xs">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button
+                                type="button"
+                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs"
+                              >
+                                导出选中报表
+                              </button>
+                              <button
+                                type="button"
+                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs"
+                              >
+                                EXCEL导入
+                              </button>
+                              <button
+                                type="button"
+                                className="px-2.5 py-1 bg-blue-600/30 text-blue-300 border border-blue-500/40 hover:bg-blue-600/50 rounded-lg text-xs font-medium"
+                              >
+                                保存
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = { ...dynamicFormValues };
+                                  ['r01', 'r02', 'r03', 'r04', 'r05'].forEach((r) => {
+                                    ['c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'].forEach((c) => {
+                                      updated[`edu_${r}_${c}`] = '';
+                                    });
+                                  });
+                                  setDynamicFormValues(updated);
+                                }}
+                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg text-xs"
+                              >
+                                清除
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleEduFillZeros}
+                                className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 rounded-lg text-xs font-semibold cursor-pointer"
+                                title="对表格内所有未填写的空单元格一键补 0"
+                              >
+                                一键补0
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleEduCalculate}
+                                className="px-2.5 py-1 bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/50 rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1"
+                                title="自动将普通初中班、职业初中班等行数据合计汇总至第01行【计】"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                <span>自动计算(求和)</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs"
+                              >
+                                查错
+                              </button>
+                            </div>
+
+                            <span className="text-[11px] text-slate-400">
+                              单位：人
+                            </span>
+                          </div>
+
+                          {/* Navigation Sub-Tabs */}
+                          <div className="flex items-center gap-1 border-b border-slate-800 overflow-x-auto text-xs pb-1">
+                            {[
+                              { id: '教基3115', label: '教基3115 初中分类学生数' },
+                              { id: '教基1001', label: '教基1001 学校基本情况' },
+                              { id: '教基1102', label: '教基1102 校舍资产与图书' },
+                              { id: '教基2107', label: '教基2107 专任教师学历与职务' },
+                              { id: '教基封面', label: '教基封面' },
+                            ].map((tab) => (
+                              <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setEducationActiveTab(tab.id)}
+                                className={`px-3 py-1.5 rounded-t-lg font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                                  educationActiveTab === tab.id
+                                    ? 'bg-blue-600 text-white font-bold'
+                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                }`}
+                              >
+                                {tab.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* 2-Tier Grid Matrix Table: 教基3115 */}
+                          <div className="border border-slate-800 rounded-xl overflow-x-auto bg-slate-950/60">
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-slate-900/90 text-slate-300 border-b border-slate-800 text-center font-bold">
+                                  <th rowSpan={2} className="p-2 border-r border-slate-800 whitespace-nowrap w-28">
+                                    指标名称
+                                  </th>
+                                  <th rowSpan={2} className="p-2 border-r border-slate-800 whitespace-nowrap w-12">
+                                    代码
+                                  </th>
+                                  <th rowSpan={2} className="p-2 border-r border-slate-800 whitespace-nowrap w-24">
+                                    毕业生数
+                                  </th>
+                                  <th rowSpan={2} className="p-2 border-r border-slate-800 whitespace-nowrap w-24">
+                                    招生数
+                                  </th>
+                                  <th colSpan={5} className="p-1.5 border-r border-slate-800 whitespace-nowrap">
+                                    在校生数
+                                  </th>
+                                  <th rowSpan={2} className="p-2 whitespace-nowrap w-24">
+                                    预计毕业生数
+                                  </th>
+                                </tr>
+                                <tr className="bg-slate-900/70 text-slate-400 border-b border-slate-800 text-center text-[11px]">
+                                  <th className="p-1 border-r border-slate-800 w-20">合计 (1)</th>
+                                  <th className="p-1 border-r border-slate-800 w-20">女 (2)</th>
+                                  <th className="p-1 border-r border-slate-800 w-20">一年级 (3)</th>
+                                  <th className="p-1 border-r border-slate-800 w-20">二年级 (4)</th>
+                                  <th className="p-1 border-r border-slate-800 w-20">三年级 (5)</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800">
+                                {[
+                                  { id: 'r01', code: '01', name: '计', isTotal: true },
+                                  { id: 'r02', code: '02', name: '普通初中班', isTotal: false },
+                                  { id: 'r03', code: '03', name: '职业初中班', isTotal: false },
+                                  { id: 'r04', code: '04', name: '特殊教育班', isTotal: false },
+                                  { id: 'r05', code: '05', name: '附设初中班', isTotal: false },
+                                ].map((row) => {
+                                  const cols = [
+                                    { id: 'c03', name: '毕业生数' },
+                                    { id: 'c04', name: '招生数' },
+                                    { id: 'c05', name: '在校生数(合计)' },
+                                    { id: 'c06', name: '在校生数(女)' },
+                                    { id: 'c07', name: '在校生数(一年级)' },
+                                    { id: 'c08', name: '在校生数(二年级)' },
+                                    { id: 'c09', name: '在校生数(三年级)' },
+                                    { id: 'c10', name: '预计毕业生数' },
+                                  ];
+
+                                  return (
+                                    <tr
+                                      key={row.id}
+                                      className={`hover:bg-slate-900/40 transition-colors ${
+                                        row.isTotal ? 'bg-slate-900/50 font-semibold' : ''
                                       }`}
                                     >
-                                      <option value="">-- 请选择 --</option>
-                                      {elem.options?.map((opt, oIdx) => (
-                                        <option key={oIdx} value={opt.value}>
-                                          {opt.text}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  ) : elem.tagName === 'textarea' ? (
-                                    <textarea
-                                      id={elem.id}
-                                      name={elem.name}
-                                      rows={2}
-                                      value={dynamicFormValues[fieldKey] || ''}
-                                      onChange={(e) =>
-                                        setDynamicFormValues({ ...dynamicFormValues, [fieldKey]: e.target.value })
-                                      }
-                                      placeholder={elem.placeholder || '请输入'}
-                                      className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
-                                        isHighlighted
-                                          ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
-                                          : 'border-slate-700 text-slate-100'
-                                      }`}
-                                    />
-                                  ) : (
-                                    <input
-                                      type={elem.type || 'text'}
-                                      id={elem.id}
-                                      name={elem.name}
-                                      value={dynamicFormValues[fieldKey] || ''}
-                                      onChange={(e) =>
-                                        setDynamicFormValues({ ...dynamicFormValues, [fieldKey]: e.target.value })
-                                      }
-                                      placeholder={elem.placeholder || '请输入'}
-                                      className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
-                                        isHighlighted
-                                          ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
-                                          : 'border-slate-700 text-slate-100'
-                                      }`}
-                                    />
-                                  )}
+                                      <td className="p-2 border-r border-slate-800 text-slate-200 whitespace-nowrap font-medium text-center">
+                                        {row.name}
+                                      </td>
+                                      <td className="p-2 border-r border-slate-800 text-slate-400 text-center font-mono text-[11px]">
+                                        {row.code}
+                                      </td>
+                                      {cols.map((col) => {
+                                        const cellId = `edu_${row.id}_${col.id}`;
+                                        const labelText = `${row.name} - ${col.name}`;
+                                        const isHighlighted =
+                                          highlightedFields[`#${cellId}`] ||
+                                          highlightedFields[cellId] ||
+                                          highlightedFields[`[id="${cellId}"]`];
 
-                                  {isHighlighted && (
-                                    <span className="absolute right-2 top-2 text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
-                                      ✨ AI已填报
-                                    </span>
-                                  )}
+                                        return (
+                                          <td
+                                            key={col.id}
+                                            className="p-1 border-r border-slate-800 last:border-r-0 relative"
+                                          >
+                                            <input
+                                              type="number"
+                                              id={cellId}
+                                              name={cellId}
+                                              data-label={labelText}
+                                              value={dynamicFormValues[cellId] ?? ''}
+                                              onChange={(e) =>
+                                                setDynamicFormValues({
+                                                  ...dynamicFormValues,
+                                                  [cellId]: e.target.value,
+                                                })
+                                              }
+                                              placeholder="0"
+                                              className={`w-full text-center px-1.5 py-1.5 bg-slate-950 border rounded-lg text-xs font-mono transition-all ${
+                                                isHighlighted
+                                                  ? 'border-amber-400 bg-amber-500/25 ring-2 ring-amber-400 text-amber-200 font-bold'
+                                                  : 'border-slate-800 text-slate-200 focus:border-blue-500 focus:bg-slate-900'
+                                              }`}
+                                            />
+                                            {isHighlighted && (
+                                              <span className="absolute -top-1 right-0 text-[8px] bg-amber-500 text-slate-950 font-bold px-1 rounded shadow">
+                                                ✨AI已填
+                                              </span>
+                                            )}
+                                          </td>
+                                        );
+                                      })}
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <div className="text-[11px] text-slate-400 flex items-center justify-between bg-slate-950/40 p-2 rounded-lg border border-slate-800">
+                            <span>
+                              💡 填报指引：右侧点击【分析当前表单】后，AI 将自动把台账中的指标对应填入上述单元格，并支持【一键补0】与【自动求和计算】。
+                            </span>
+                          </div>
+                        </div>
+                      ) : scrapedData ? (
+                        /* SCRAPED EXTERNAL FORM VIEW OR SPA DIAGNOSTIC CARD */
+                        scrapedData.elements.length === 0 ? (
+                          /* SPA EMPTY DIAGNOSIS CARD */
+                          <div className="space-y-4">
+                            <div className="p-5 bg-gradient-to-r from-amber-950/30 via-slate-900 to-amber-950/20 border border-amber-500/30 rounded-2xl space-y-4 shadow-xl">
+                              <div className="flex items-start gap-3">
+                                <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl flex-shrink-0 mt-0.5">
+                                  <AlertTriangle className="w-5 h-5" />
+                                </div>
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-bold text-white">
+                                    目标系统为客户端动态渲染单页应用 (SPA) 或需要登录身份
+                                  </h4>
+                                  <p className="text-xs text-slate-300 leading-relaxed">
+                                    当前输入的网址 <code className="text-amber-300 font-mono">{targetUrlInput}</code>{' '}
+                                    属于政务/统计类单页系统（Vue/React SPA，包含 <code className="text-amber-300 font-mono">_t=...</code> 会话 Token）。
+                                    无状态的静态网络爬虫无法在未携带您的登录 Cookie/会话的情况下，在后台执行前端 JavaScript 渲染出内部动态表单。
+                                  </p>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </form>
-                    ) : (
-                      /* Preset System Form View */
-                      <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {activePreset?.fields.map((f: any) => {
-                            const isHighlighted = highlightedFields[`#${f.id}`] || highlightedFields[`[name="${f.id}"]`];
 
-                            if (f.type === 'textarea') {
+                              <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-3">
+                                <span className="text-xs font-bold text-slate-200 block">
+                                  已为您准备以下 3 种即开即用的解决方案：
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                  <button
+                                    type="button"
+                                    onClick={loadEducationSampleData}
+                                    className="p-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl text-left cursor-pointer transition-colors"
+                                  >
+                                    <div className="text-xs font-bold text-emerald-300 mb-1 flex items-center gap-1">
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                      <span>方案一：1:1 统计仿真表</span>
+                                    </div>
+                                    <span className="text-[11px] text-slate-400 block">
+                                      直接切换到 1:1 教育部教育统计综合调查(教基3115)真实表单演练
+                                    </span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setLeftViewMode('iframe')}
+                                    className="p-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-xl text-left cursor-pointer transition-colors"
+                                  >
+                                    <div className="text-xs font-bold text-blue-300 mb-1 flex items-center gap-1">
+                                      <Globe className="w-3.5 h-3.5" />
+                                      <span>方案二：实时反代内嵌</span>
+                                    </div>
+                                    <span className="text-[11px] text-slate-400 block">
+                                      在左侧内嵌反向代理穿透后的完整网页
+                                    </span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setLeftViewMode('paste')}
+                                    className="p-3 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-xl text-left cursor-pointer transition-colors"
+                                  >
+                                    <div className="text-xs font-bold text-purple-300 mb-1 flex items-center gap-1">
+                                      <Code2 className="w-3.5 h-3.5" />
+                                      <span>方案三：粘贴 DOM 提取</span>
+                                    </div>
+                                    <span className="text-[11px] text-slate-400 block">
+                                      从您已登录的网页 F12 复制表单 HTML 直接导入
+                                    </span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="text-[11px] text-slate-400 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                                <span className="font-semibold text-slate-300 block mb-0.5">
+                                  🌟 Chrome 插件实战提示（核心生产方式）：
+                                </span>
+                                本项目的 Chrome 插件设计正是为了解决这一场景！您只需在 Chrome 扩展管理中加载解压后的插件，直接在您当前已登录教育统计系统的标签页中打开插件 SidePanel，点击【分析表单】，插件便能直接在您当前运行中的原生 DOM 里一键抓取并高亮填报！
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Scraped Elements List */
+                          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 mb-4 flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                              <span>已成功解析外部网站表单结构！右侧 SidePanel 将自动识别并填充以下动态表单控件。</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {scrapedData.elements.map((elem, idx) => {
+                                const fieldKey = elem.id || elem.name || `field_${idx}`;
+                                const isHighlighted =
+                                  highlightedFields[elem.selector] || highlightedFields[`#${elem.id}`];
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={elem.tagName === 'textarea' ? 'md:col-span-2' : ''}
+                                  >
+                                    <label
+                                      htmlFor={elem.id || `field_${idx}`}
+                                      className="block text-xs font-semibold text-slate-300 mb-1"
+                                    >
+                                      {elem.label}
+                                    </label>
+
+                                    <div className="relative">
+                                      {elem.tagName === 'select' ? (
+                                        <select
+                                          id={elem.id}
+                                          name={elem.name}
+                                          value={dynamicFormValues[fieldKey] || ''}
+                                          onChange={(e) =>
+                                            setDynamicFormValues({
+                                              ...dynamicFormValues,
+                                              [fieldKey]: e.target.value,
+                                            })
+                                          }
+                                          className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
+                                            isHighlighted
+                                              ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
+                                              : 'border-slate-700 text-slate-100'
+                                          }`}
+                                        >
+                                          <option value="">-- 请选择 --</option>
+                                          {elem.options?.map((opt, oIdx) => (
+                                            <option key={oIdx} value={opt.value}>
+                                              {opt.text}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : elem.tagName === 'textarea' ? (
+                                        <textarea
+                                          id={elem.id}
+                                          name={elem.name}
+                                          rows={2}
+                                          value={dynamicFormValues[fieldKey] || ''}
+                                          onChange={(e) =>
+                                            setDynamicFormValues({
+                                              ...dynamicFormValues,
+                                              [fieldKey]: e.target.value,
+                                            })
+                                          }
+                                          placeholder={elem.placeholder || '请输入'}
+                                          className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
+                                            isHighlighted
+                                              ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
+                                              : 'border-slate-700 text-slate-100'
+                                          }`}
+                                        />
+                                      ) : (
+                                        <input
+                                          type={elem.type || 'text'}
+                                          id={elem.id}
+                                          name={elem.name}
+                                          value={dynamicFormValues[fieldKey] || ''}
+                                          onChange={(e) =>
+                                            setDynamicFormValues({
+                                              ...dynamicFormValues,
+                                              [fieldKey]: e.target.value,
+                                            })
+                                          }
+                                          placeholder={elem.placeholder || '请输入'}
+                                          className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
+                                            isHighlighted
+                                              ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
+                                              : 'border-slate-700 text-slate-100'
+                                          }`}
+                                        />
+                                      )}
+
+                                      {isHighlighted && (
+                                        <span className="absolute right-2 top-2 text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
+                                          ✨ AI已填报
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </form>
+                        )
+                      ) : (
+                        /* Standard Preset Form View */
+                        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {activePreset?.fields.map((f: any) => {
+                              const isHighlighted =
+                                highlightedFields[`#${f.id}`] || highlightedFields[`[name="${f.id}"]`];
+
+                              if (f.type === 'textarea') {
+                                return (
+                                  <div key={f.id} className="md:col-span-2">
+                                    <label
+                                      htmlFor={f.id}
+                                      className="block text-xs font-semibold text-slate-300 mb-1"
+                                    >
+                                      {f.required && <span className="text-red-400">* </span>}
+                                      {f.label}
+                                    </label>
+                                    <div className="relative">
+                                      <textarea
+                                        id={f.id}
+                                        name={f.id}
+                                        rows={2}
+                                        value={dynamicFormValues[f.id] || ''}
+                                        onChange={(e) =>
+                                          setDynamicFormValues({
+                                            ...dynamicFormValues,
+                                            [f.id]: e.target.value,
+                                          })
+                                        }
+                                        placeholder={f.placeholder}
+                                        className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
+                                          isHighlighted
+                                            ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
+                                            : 'border-slate-700 text-slate-100'
+                                        }`}
+                                      />
+                                      {isHighlighted && (
+                                        <span className="absolute right-2 top-2 text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
+                                          ✨ AI已注入
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              if (f.type === 'select') {
+                                return (
+                                  <div key={f.id}>
+                                    <label
+                                      htmlFor={f.id}
+                                      className="block text-xs font-semibold text-slate-300 mb-1"
+                                    >
+                                      {f.required && <span className="text-red-400">* </span>}
+                                      {f.label}
+                                    </label>
+                                    <div className="relative">
+                                      <select
+                                        id={f.id}
+                                        name={f.id}
+                                        value={dynamicFormValues[f.id] || ''}
+                                        onChange={(e) =>
+                                          setDynamicFormValues({
+                                            ...dynamicFormValues,
+                                            [f.id]: e.target.value,
+                                          })
+                                        }
+                                        className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
+                                          isHighlighted
+                                            ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
+                                            : 'border-slate-700 text-slate-100'
+                                        }`}
+                                      >
+                                        <option value="">-- 请选择 --</option>
+                                        {f.options?.map((opt: string) => (
+                                          <option key={opt} value={opt}>
+                                            {opt}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      {isHighlighted && (
+                                        <span className="absolute right-6 top-2 text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
+                                          ✨ AI已注入
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              if (f.type === 'radio') {
+                                return (
+                                  <div key={f.id}>
+                                    <span className="block text-xs font-semibold text-slate-300 mb-2">
+                                      {f.label}
+                                    </span>
+                                    <div className="flex items-center gap-6 text-xs">
+                                      {f.options?.map((opt: string) => (
+                                        <label
+                                          key={opt}
+                                          className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={f.id}
+                                            value={opt}
+                                            checked={dynamicFormValues[f.id] === opt}
+                                            onChange={(e) =>
+                                              setDynamicFormValues({
+                                                ...dynamicFormValues,
+                                                [f.id]: e.target.value,
+                                              })
+                                            }
+                                            className="accent-blue-500"
+                                          />
+                                          <span>{opt}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
                               return (
-                                <div key={f.id} className="md:col-span-2">
-                                  <label htmlFor={f.id} className="block text-xs font-semibold text-slate-300 mb-1">
+                                <div key={f.id}>
+                                  <label
+                                    htmlFor={f.id}
+                                    className="block text-xs font-semibold text-slate-300 mb-1"
+                                  >
                                     {f.required && <span className="text-red-400">* </span>}
                                     {f.label}
                                   </label>
                                   <div className="relative">
-                                    <textarea
+                                    <input
+                                      type={f.type || 'text'}
                                       id={f.id}
                                       name={f.id}
-                                      rows={2}
                                       value={dynamicFormValues[f.id] || ''}
                                       onChange={(e) =>
-                                        setDynamicFormValues({ ...dynamicFormValues, [f.id]: e.target.value })
+                                        setDynamicFormValues({
+                                          ...dynamicFormValues,
+                                          [f.id]: e.target.value,
+                                        })
                                       }
                                       placeholder={f.placeholder}
                                       className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
                                         isHighlighted
                                           ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
-                                          : 'border-slate-700 text-slate-100'
+                                          : 'border-slate-700 text-slate-100 focus:border-blue-500'
                                       }`}
                                     />
                                     {isHighlighted && (
@@ -1012,106 +1817,12 @@ export default function HomePage() {
                                   </div>
                                 </div>
                               );
-                            }
-
-                            if (f.type === 'select') {
-                              return (
-                                <div key={f.id}>
-                                  <label htmlFor={f.id} className="block text-xs font-semibold text-slate-300 mb-1">
-                                    {f.required && <span className="text-red-400">* </span>}
-                                    {f.label}
-                                  </label>
-                                  <div className="relative">
-                                    <select
-                                      id={f.id}
-                                      name={f.id}
-                                      value={dynamicFormValues[f.id] || ''}
-                                      onChange={(e) =>
-                                        setDynamicFormValues({ ...dynamicFormValues, [f.id]: e.target.value })
-                                      }
-                                      className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
-                                        isHighlighted
-                                          ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
-                                          : 'border-slate-700 text-slate-100'
-                                      }`}
-                                    >
-                                      <option value="">-- 请选择 --</option>
-                                      {f.options?.map((opt: string) => (
-                                        <option key={opt} value={opt}>
-                                          {opt}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {isHighlighted && (
-                                      <span className="absolute right-6 top-2 text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
-                                        ✨ AI已注入
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            }
-
-                            if (f.type === 'radio') {
-                              return (
-                                <div key={f.id}>
-                                  <span className="block text-xs font-semibold text-slate-300 mb-2">{f.label}</span>
-                                  <div className="flex items-center gap-6 text-xs">
-                                    {f.options?.map((opt: string) => (
-                                      <label key={opt} className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                          type="radio"
-                                          name={f.id}
-                                          value={opt}
-                                          checked={dynamicFormValues[f.id] === opt}
-                                          onChange={(e) =>
-                                            setDynamicFormValues({ ...dynamicFormValues, [f.id]: e.target.value })
-                                          }
-                                          className="accent-blue-500"
-                                        />
-                                        <span>{opt}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div key={f.id}>
-                                <label htmlFor={f.id} className="block text-xs font-semibold text-slate-300 mb-1">
-                                  {f.required && <span className="text-red-400">* </span>}
-                                  {f.label}
-                                </label>
-                                <div className="relative">
-                                  <input
-                                    type={f.type || 'text'}
-                                    id={f.id}
-                                    name={f.id}
-                                    value={dynamicFormValues[f.id] || ''}
-                                    onChange={(e) =>
-                                      setDynamicFormValues({ ...dynamicFormValues, [f.id]: e.target.value })
-                                    }
-                                    placeholder={f.placeholder}
-                                    className={`w-full px-3 py-2 bg-slate-950 border rounded-xl text-xs transition-all ${
-                                      isHighlighted
-                                        ? 'border-amber-400 bg-amber-500/20 ring-4 ring-amber-400/40 text-amber-200'
-                                        : 'border-slate-700 text-slate-100 focus:border-blue-500'
-                                    }`}
-                                  />
-                                  {isHighlighted && (
-                                    <span className="absolute right-2 top-2 text-[10px] bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
-                                      ✨ AI已注入
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </form>
-                    )}
-                  </div>
+                            })}
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1129,7 +1840,7 @@ export default function HomePage() {
                           AI 表单填写助手 (SidePanel)
                         </span>
                         <span className="text-[10px] text-slate-400 truncate max-w-[200px] block">
-                          当前绑定: {new URL(targetUrlInput).hostname}
+                          当前绑定: {(() => { try { return new URL(targetUrlInput).hostname; } catch { return targetUrlInput; } })()}
                         </span>
                       </div>
                     </div>
@@ -1256,10 +1967,12 @@ export default function HomePage() {
                       {currentRecord && (
                         <div className="text-[11px] bg-slate-900 p-2 rounded-lg text-slate-400">
                           <span className="font-semibold text-slate-300 block mb-1">
-                            当前选定单位：{currentRecord['单位名称'] || '未命名'}
+                            当前选定：{currentRecord['单位名称'] || currentRecord['指标分类'] || '未命名记录'}
                           </span>
                           <span className="text-[10px] text-slate-500">
-                            统一代码: {currentRecord['统一代码']} | 职工: {currentRecord['职工人数']}人 | 收入: {currentRecord['年营业收入']}万元
+                            {currentRecord['统一代码']
+                              ? `统一代码: ${currentRecord['统一代码']} | 职工: ${currentRecord['职工人数']}人 | 收入: ${currentRecord['年营业收入']}万元`
+                              : `代码: ${currentRecord['代码']} | 毕业生: ${currentRecord['毕业生数']} | 招生: ${currentRecord['招生数']} | 在校生: ${currentRecord['在校生数_合计']}`}
                           </span>
                         </div>
                       )}

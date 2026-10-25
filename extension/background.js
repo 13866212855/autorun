@@ -1,9 +1,29 @@
 // Chrome Extension Manifest V3 Background Service Worker
 
 // Enable side panel open on action click
-chrome.sidePanel
-  .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((error) => console.error('SidePanel config error:', error));
+if (typeof chrome !== 'undefined' && chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
+  chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error) => console.warn('SidePanel setPanelBehavior error:', error));
+}
+
+// Fallback for action click
+if (typeof chrome !== 'undefined' && chrome.action && chrome.action.onClicked) {
+  chrome.action.onClicked.addListener(async (tab) => {
+    if (chrome.sidePanel && chrome.sidePanel.open && tab && tab.id) {
+      try {
+        await chrome.sidePanel.open({ tabId: tab.id });
+      } catch (err) {
+        console.warn('sidePanel.open failed:', err);
+      }
+    }
+  });
+}
+
+// Keep service worker active on install/start
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('[AI Form Filler] Extension installed successfully.');
+});
 
 // Message router between SidePanel, ContentScript and External APIs
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -28,7 +48,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'FORWARD_TO_CONTENT') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (!tabs || tabs.length === 0 || !tabs[0].id) {
-        sendResponse({ success: false, error: '未找到活动的浏览器标签页' });
+        sendResponse({ success: false, error: '未找到活动的浏览器标签页，请先点击选中目标网页' });
         return;
       }
 
@@ -36,7 +56,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (chrome.runtime.lastError) {
           sendResponse({
             success: false,
-            error: `无法与当前页面通信: ${chrome.runtime.lastError.message}。请刷新目标页面后再试。`,
+            error: `无法与当前页面通信: ${chrome.runtime.lastError.message}。请刷新目标页面（F5）后再试。`,
           });
         } else {
           sendResponse(response);
